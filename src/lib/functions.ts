@@ -1,10 +1,10 @@
-import type { Contract } from "web3-eth-contract";
-import type { CalculatedTokenRatio } from "./state";
-import { derived } from "svelte/store";
-import type { Readable } from "svelte/store";
+import type {Contract} from "web3-eth-contract";
+import type {CalculatedTokenRatio} from "./state";
+import {derived} from "svelte/store";
+import type {Readable} from "svelte/store";
 
 
-export function calculateRatio (args: {
+export function calculateRatio(args: {
   rawAmountOfBaseToken: number,
   decimalsOfBaseToken: number,
   rawAmountOfToken: number,
@@ -22,7 +22,7 @@ export function calculateRatio (args: {
   }
 }
 
-export async function calculateRatioByContracts (args: {
+export async function calculateRatioByContracts(args: {
   baseTokenContract: Contract,
   baseTokenDecimals: number,
   tokenContract: Contract,
@@ -31,6 +31,11 @@ export async function calculateRatioByContracts (args: {
 }): Promise<CalculatedTokenRatio> {
   const rawAmountOfBaseToken = (await args.baseTokenContract.methods.balanceOf(args.addressOfLp).call());
   const rawAmountOfToken = await args.tokenContract.methods.balanceOf(args.addressOfLp).call();
+
+  console.info({
+    rawAmountOfBaseToken,
+    rawAmountOfToken
+  })
 
   return calculateRatio({
     rawAmountOfBaseToken,
@@ -41,7 +46,7 @@ export async function calculateRatioByContracts (args: {
 }
 
 
-export function deriveActualPrice (tokenRatioStore: Readable<CalculatedTokenRatio>, baseTokenPriceStore: Readable<number>) {
+export function deriveActualPrice(tokenRatioStore: Readable<CalculatedTokenRatio>, baseTokenPriceStore: Readable<number>) {
   return derived([tokenRatioStore, baseTokenPriceStore], ([tokenRatio, baseTokenPrice]) => {
     if (!tokenRatio) {
       return 0;

@@ -1,190 +1,132 @@
 <script lang="ts">
   import TokenPriceTile from '../components/TokenPriceTile.svelte';
-  import {
-    maxPomUrls,
-    mmpPomUrls,
-    pomBscUrls,
-    pomCexUrls,
-    pomDUrls,
-    pomEthUrls,
-    pomGUrls,
-    umcPomUrls
-  } from "../TokenConstants.js";
-  import {
-    averagePrice, isLoading, maxxPrice, mmpPrice,
-    pomBscPrice,
-    pomDPrice,
-    pomEthPrice,
-    pomGPrice,
-    refreshData,
-    umcPrice
-  } from "../pomCoinPriceChecker.js";
-  import { bnbPrice, ethPrice, pomChainCexPrice } from "../state.js";
-  import { formatNumber, formatNumberUSD } from "../utils.js";
+  import {formatNumber} from "../utils";
   import HeaderRow from "../components/HeaderRow.svelte";
-  import { Button, Loader } from "@svelteuidev/core";
-  import { Grid } from "../components/Grid";
+  import {Button} from "@svelteuidev/core";
+  import {Grid} from "../components/Grid";
+  import {MAXX_BNB, MAXX_ETH, MAXX_PWR, PWR_CEX, PWR_DEX} from "../logic/maxxMainTokes";
+  import {attachRefresher, isRefreshing, refreshData} from "../logic/refresher";
+  import {PriceCache, priceCacheCall} from "../logic/priceCache";
+  import {getTokenRatio} from "../sources";
+  import type {PriceCacheEntry, StaticTokenInformationDEX} from "../logic/types";
+  import {MUSDT_MAXX_CONTRACT, WBNB_CONTRACT, WETH_CONTRACT, WPWR_CONTRACT} from "../logic/chainTokens";
+  import {get} from "svelte/store";
+  import {updateEthPrice, updateBnbPrice} from "../coincapPriceChecker";
+  import PairedPriceToTokenAmount from "../components/PairedPriceToTokenAmount.svelte";
 
   // usually not needed BUT so that the IDE says "its ok" ^^
   const {Col: GridCol} = Grid;
 
+
+  attachRefresher(
+    () => priceCacheCall({
+      id: WETH_CONTRACT
+    }, () => updateEthPrice().then(price => {
+      return {priceUSD: price, source: 'coincap API'}
+    }))
+  )
+
+  attachRefresher(
+    () => priceCacheCall({
+      id: WBNB_CONTRACT
+    }, () => updateBnbPrice().then(price => {
+      return {priceUSD: price, source: 'coincap API'}
+    }))
+  )
+
+  attachRefresher(
+    () => priceCacheCall(PWR_CEX, () => PWR_CEX.getTokenPriceRefresher())
+  );
+
+  async function getTokenPriceDex(tokenInfo: StaticTokenInformationDEX) {
+    const tokenRatio = await getTokenRatio(tokenInfo);
+
+    let valueOfPairedToken = 1;
+
+    switch (tokenInfo.chainAddresses.pairedWithContract) {
+      case WETH_CONTRACT: {
+        valueOfPairedToken = get(PriceCache)[WETH_CONTRACT]?.priceUSD;
+        break;
+      }
+      case WBNB_CONTRACT: {
+        valueOfPairedToken = get(PriceCache)[WBNB_CONTRACT]?.priceUSD;
+        break;
+      }
+      case WPWR_CONTRACT: {
+        valueOfPairedToken = get(PriceCache)['pwrDEX']?.priceUSD;
+        break;
+      }
+    }
+
+    return {
+      source: `${tokenInfo.chain} LP Calculation`,
+      priceBackedToken: 0,
+      priceUSD: tokenRatio.ratio * valueOfPairedToken
+    } as PriceCacheEntry;
+  }
+
+  attachRefresher(
+    () => priceCacheCall(PWR_DEX, () => getTokenPriceDex(PWR_DEX), {
+      setContractAsKeyAsWell: PWR_DEX.chainAddresses.tokenAddress
+    })
+  );
+
+  attachRefresher(
+    () => priceCacheCall(MAXX_BNB, () => getTokenPriceDex(MAXX_BNB))
+  );
+
+  attachRefresher(
+    () => priceCacheCall(MAXX_ETH, () => getTokenPriceDex(MAXX_ETH))
+  );
+
+  attachRefresher(
+    () => priceCacheCall(MAXX_PWR, () => getTokenPriceDex(MAXX_PWR))
+  );
+
   refreshData();
 
-  $: tokens = [
-    {
-      id: 'pomCEX',
-      tokenName: 'POM',
-      title: 'POM MemeScan / CEX Price',
-      price: $pomChainCexPrice,
-      urls: pomCexUrls,
-    },
-    {
-      id: 'pomBNB',
-      tokenName: 'POM',
-      title: `POM (BSC) - BNB: $${formatNumber($bnbPrice)}`,
-      price: $pomBscPrice,
-      urls: pomBscUrls,
+  const TOKENS_STATIC_LIST = [
+    PWR_CEX,
+    PWR_DEX,
+    MAXX_BNB,
+    MAXX_ETH,
+    MAXX_PWR
+  ] as const;
 
-      otherCalculations: {
-        pairedWith: '$BNB',
-        pairedPrice: $bnbPrice
-      }
-    },
-    {
-      id: 'pomETH',
-      tokenName: 'POM',
-      title: `POM (ETH) - ETH: $${formatNumber($ethPrice)}`,
-      price: $pomEthPrice,
-      urls: pomEthUrls,
-
-      otherCalculations: {
-        pairedWith: '$ETH',
-        pairedPrice: $ethPrice
-      }
-    },
-    {
-      id: 'pomG',
-      tokenName: 'POMG',
-      title: `POMG`,
-      price: $pomGPrice,
-      urls: pomGUrls,
-
-      otherCalculations: {
-        pairedWith: '$POM',
-        pairedPrice: $averagePrice
-      }
-    },
-    {
-      id: 'pomD',
-      tokenName: 'POMD',
-      title: `POMD`,
-      price: $pomDPrice,
-      urls: pomDUrls,
-
-      otherCalculations: {
-        pairedWith: '$POM',
-        pairedPrice: $averagePrice
-      }
-    },
-    {
-      id: 'umc',
-      tokenName: 'UMC',
-      title: `United Meme Corps`,
-      price: $umcPrice,
-      urls: umcPomUrls,
-
-      otherCalculations: {
-        pairedWith: '$POM',
-        pairedPrice: $averagePrice
-      }
-    }
-  ];
-
-  $: otherProjects = [
-    {
-      id: 'maxx',
-      tokenName: 'MAXX',
-      title: `Maxx`,
-      price: $maxxPrice,
-      urls: maxPomUrls,
-
-      otherCalculations: {
-        pairedWith: '$POM',
-        pairedPrice: $averagePrice
-      }
-    },
-    {
-      id: 'mmp',
-      tokenName: 'MMP',
-      title: `MoneyMagnet POM`,
-      price: $mmpPrice,
-      urls: mmpPomUrls,
-
-      otherCalculations: {
-        pairedWith: '$POM',
-        pairedPrice: $averagePrice
-      }
-    }
-  ]
+  const USD_CONTRACTS = [MUSDT_MAXX_CONTRACT];
 </script>
 
 <HeaderRow>
-  Proof Of Memes - Token Price Overview - POM: ${formatNumberUSD($averagePrice)} (avg) &nbsp;&nbsp;
-
-  <Button on:click={() => refreshData()} compact loading={$isLoading}>
-    {$isLoading ? 'Refreshing' : 'Refresh'}
-  </Button>
+   <Button on:click={() => refreshData()} compact loading={$isRefreshing}>
+      {$isRefreshing ? 'Refreshing' : 'Refresh'}
+   </Button>
+   &nbsp;
+   can be refreshed every full min
 </HeaderRow>
 <br/>
 <br/>
 
 <Grid>
-  <GridCol span={12}>
+   <GridCol span={12}>
 
-  </GridCol>
-  {#each tokens as token (token.id)}
-    <GridCol md={4} xs={6}>
-      <TokenPriceTile title={token.title} price={token.price} urls={token.urls}
-                      mainUrl={token.urls.find(u => u.type === 'homepage')}>
-        <div slot="additionalData">
-
-          {#if token.price === 0 && token.id === 'pomCEX'}
-            Please check adblockers (memescan is blocked lol)
-          {:else}
-            $1 => {formatNumber(1 / token.price)} {token.tokenName} <br/>
-            {#if token.otherCalculations}
-              1 {token.otherCalculations.pairedWith}
-              => {formatNumber(token.otherCalculations.pairedPrice / token.price)} {token.tokenName}<br/>
-            {/if}
-          {/if}
-        </div>
-      </TokenPriceTile>
-    </GridCol>
-  {/each}
-</Grid>
-
-
-<h2>Projects</h2>
-
-<Grid>
-  {#each otherProjects as token (token.id)}
-    <GridCol md={4} xs={6}>
-      <TokenPriceTile title={token.title} price={token.price} urls={token.urls}
-                      mainUrl={token.urls.find(u => u.type === 'homepage')}>
-        <div slot="additionalData">
-
-          $1 => {formatNumber(1 / token.price)} {token.tokenName} <br/>
-          {#if token.otherCalculations}
-            1 {token.otherCalculations.pairedWith}
-            => {formatNumber(token.otherCalculations.pairedPrice / token.price)} {token.tokenName}<br/>
-          {/if}
-        </div>
-      </TokenPriceTile>
-    </GridCol>
-  {/each}
-
-  <GridCol xs={12}>
-
-    More projects to be added
-  </GridCol>
+   </GridCol>
+   {#each TOKENS_STATIC_LIST as token (token.id)}
+      <GridCol md={4} xs={6}>
+         <TokenPriceTile staticInfo={token}>
+            <div slot="additionalData" let:priceToShow>
+               {#if priceToShow === 0 && token.id === 'pwrCEX'}
+                  Either Maxx Explorer Price API not returning a Price or <br/>
+                  Please check adblockers (maxx explorer url is blocked lol)
+               {:else}
+                  $1 => {formatNumber(1 / priceToShow)} {token.tokenName} <br/>
+                  {#if token.chainAddresses && !USD_CONTRACTS.includes(token.chainAddresses.pairedWithContract)}
+                     <PairedPriceToTokenAmount tokenInfo={token}
+                                               priceOfToken={priceToShow}/>
+                     <br/>
+                  {/if}
+               {/if}
+            </div>
+         </TokenPriceTile>
+      </GridCol>
+   {/each}
 </Grid>

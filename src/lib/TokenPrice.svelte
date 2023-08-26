@@ -1,12 +1,8 @@
 <script lang="ts">
-  import type { TokenEntry } from "./memeScanTypes";
-  import { cacheableResult } from "./utils";
-  import { uniswapV2Contract } from "./ABII/contractsWithLiquidity";
-  import { getTokens } from "./ABII/memeScanApi";
+  import type {TokenEntry} from "./memeScanTypes";
+  import {cacheableResult} from "./utils";
 
   export let tokenEntry: TokenEntry;
-
-  // web3PomConnection
 
   interface TokenInfo {
     status: string;
@@ -68,7 +64,7 @@
 
 <br/>
 
-<button on:click={refresh}>  refresh token info</button>
+<button on:click={refresh}> refresh token info</button>
 
 <br/>
 

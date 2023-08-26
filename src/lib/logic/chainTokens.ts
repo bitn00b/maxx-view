@@ -1,0 +1,7 @@
+export const WBNB_CONTRACT = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+
+export const WETH_CONTRACT = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+
+export const WPWR_CONTRACT = '0xA29D0ee618f33d8eFE9A20557fd0EF63dD050859'
+
+export const MUSDT_MAXX_CONTRACT = '0x66fee502b776cf88ce2df6f13d72f1c98d452abd';

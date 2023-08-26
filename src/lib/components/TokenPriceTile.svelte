@@ -1,20 +1,28 @@
 <script lang="ts">
-  import { ActionIcon, Paper, Menu } from '@svelteuidev/core';
-  import type { UrlIcon } from "./types";
+  import {ActionIcon, Paper, Menu} from '@svelteuidev/core';
   import Icon from 'svelte-icons-pack/Icon.svelte';
   import BiGlobe from "svelte-icons-pack/bi/BiGlobe";
   import BiLogoTelegram from "svelte-icons-pack/bi/BiLogoTelegram";
   import FiTwitter from "svelte-icons-pack/fi/FiTwitter";
   import SimpleImage from "./SimpleImage.svelte";
   import FaSolidExternalLinkSquareAlt from "svelte-icons-pack/fa/FaSolidExternalLinkSquareAlt";
-  import { formatNumberUSD } from "../utils.js";
+  import {formatNumberUSD} from "../utils.js";
+  import type {StaticTokenInformation, UrlIcon} from "../logic/types";
+  import {getTokenPriceReadable} from "../logic/priceCache";
 
   const MenuItem = Menu.Item;
 
-  export let title: string;
-  export let price: number;
-  export let urls: UrlIcon[];
-  export let mainUrl: UrlIcon | undefined;
+  export let staticInfo: StaticTokenInformation;
+
+  let mainUrl = staticInfo.urls.find(u => u.type === 'homepage');
+
+  export let priceValue: number = undefined;
+
+  const priceOfTokenInfo = getTokenPriceReadable(staticInfo);
+
+  $: priceOfTokenUSD = $priceOfTokenInfo?.priceUSD;
+
+  $: priceToShow = priceValue ?? priceOfTokenUSD;
 
   const iconMap: { [key: UrlIcon['type']]: unknown } = {
     'homepage': BiGlobe,
@@ -30,57 +38,60 @@
 </script>
 
 <Paper>
-  <div>
-    <div class="title-row">
-      {title}
+   <div>
+      <div class="title-row">
+         {staticInfo.title}
 
-      <div class="top-right">
-        <Menu>
-          <ActionIcon color="blue" variant="light" slot="control">
-            <Icon src={FaSolidExternalLinkSquareAlt} size="16" color="lightgray"></Icon>
-          </ActionIcon>
+         {#if staticInfo.urls.length}
+            <div class="top-right">
+               <Menu>
+                  <ActionIcon color="blue" variant="light" slot="control">
+                     <Icon src={FaSolidExternalLinkSquareAlt} size="16" color="lightgray"></Icon>
+                  </ActionIcon>
 
-          {#each urls as urlEntry}
-            {#if urlEntry.type === 'custom'}
-              <MenuItem href={urlEntry.targetUrl} root="a" target="_blank"
-                        icon={SimpleImage} iconProps="{{
+                  {#each staticInfo.urls as urlEntry}
+                     {#if urlEntry.type === 'custom'}
+                        <MenuItem href={urlEntry.targetUrl} root="a" target="_blank"
+                                  icon={SimpleImage} iconProps="{{
                         iconProps: {
                           src: urlEntry.iconUrl,
                           size: 16,
                         }
                       }}">
-                {urlEntry.title}
-              </MenuItem>
-            {:else}
-              <MenuItem href={urlEntry.targetUrl} root="a" target="_blank"
-                        icon={Icon}
-                        iconProps="{
+                           {urlEntry.title}
+                        </MenuItem>
+                     {:else}
+                        <MenuItem href={urlEntry.targetUrl} root="a" target="_blank"
+                                  icon={Icon}
+                                  iconProps="{
                        {iconProps: {
                          src: iconMap[urlEntry.type],
                          size: 24,
                          color:iconColorMap[urlEntry.type],
                          className: 'custom-icon-16'
                        }}}">
-                {urlEntry.title}
-              </MenuItem>
+                           {urlEntry.title}
+                        </MenuItem>
+                     {/if}
+                  {/each}
+               </Menu>
 
-            {/if}
-          {/each}
-        </Menu>
-
-        {#if mainUrl}
-          <ActionIcon color="blue" variant="light" root="a" target="_blank" title={mainUrl.title}
-                      href={mainUrl.targetUrl} style="margin-top: 0.5rem">
-            <Icon src={iconMap[mainUrl.type]} size="24" color="white"></Icon>
-          </ActionIcon>
-        {/if}
+               {#if mainUrl}
+                  <ActionIcon color="blue" variant="light" root="a" target="_blank" title={mainUrl.title}
+                              href={mainUrl.targetUrl} style="margin-top: 0.5rem">
+                     <Icon src={iconMap[mainUrl.type]} size="24" color="white"></Icon>
+                  </ActionIcon>
+               {/if}
+            </div>
+         {/if}
       </div>
 
-    </div>
-    <h3>$ {formatNumberUSD(price)}</h3>
+      {#if !!priceToShow }
+         <h3>$ {formatNumberUSD(priceToShow)}</h3>
+      {/if}
 
-    <slot name="additionalData"></slot>
-  </div>
+      <slot name="additionalData" priceToShow={priceToShow}></slot>
+   </div>
 </Paper>
 
 <div style="display: flex; gap: 0.5rem">

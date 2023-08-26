@@ -1,6 +1,6 @@
-import type { UrlIcon } from "./components/types";
+import type {CHAIN_TYPES, UrlIcon} from "./logic/types";
 
-export function homepage (link: string): UrlIcon {
+export function homepage(link: string): UrlIcon {
   return {
     title: 'Homepage',
     type: 'homepage',
@@ -8,7 +8,7 @@ export function homepage (link: string): UrlIcon {
   };
 }
 
-export function telegram (link: string): UrlIcon {
+export function telegram(link: string): UrlIcon {
   return {
     title: 'Telegram',
     type: 'telegram',
@@ -16,7 +16,7 @@ export function telegram (link: string): UrlIcon {
   };
 }
 
-export function twitter (link: string): UrlIcon {
+export function twitter(link: string): UrlIcon {
   return {
     title: 'Twitter',
     type: 'twitter',
@@ -24,41 +24,54 @@ export function twitter (link: string): UrlIcon {
   };
 }
 
-export function charts (chain: string, pool: string): UrlIcon[] {
-  let geckoChain = chain;
-  let dexScreenerChain = chain;
+export function charts(chain: CHAIN_TYPES, pool: string): UrlIcon[] {
+  let geckoChain: string = chain;
+  let dexScreenerChain: string = chain;
 
   switch (chain) {
     case 'eth': {
       dexScreenerChain = 'ethereum';
       break;
     }
-    case 'pom': {
-      geckoChain = 'proof_of_memes';
-      dexScreenerChain = 'proofofmemes';
+    case 'maxx': {
+      geckoChain = 'maxxchain';
+      dexScreenerChain = '';
     }
   }
 
-
-  return [
+  const chartArray: UrlIcon[] = [
     {
       title: 'GeckoTerminal',
       type: 'custom',
       iconUrl: 'https://www.geckoterminal.com/images/favicon.ico',
       targetUrl: `https://www.geckoterminal.com/${geckoChain}/pools/${pool}`
     },
-    {
+  ]
+
+  if (dexScreenerChain) {
+    chartArray.push({
       title: 'DexScreener',
       type: 'custom',
       iconUrl: './assets/dexscreener.png',
       targetUrl: `https://dexscreener.com/${dexScreenerChain}/${pool}`
-    }
-  ]
+    })
+  }
+
+  return chartArray;
 }
 
-export function memescan (address?: string, titleSuffix = ''): UrlIcon {
+export function maxxExplorer(address?: string, titleSuffix = ''): UrlIcon {
   return {
-    title: `Memescan ${titleSuffix}`,
+    title: `Maxx Explorer ${titleSuffix}`,
+    type: 'custom',
+    iconUrl: './assets/memescan.png',
+    targetUrl: address ? `https://memescan.io/address/${address}` : 'https://memescan.io/'
+  }
+}
+
+export function bscscan(address: string, titleSuffix = ''): UrlIcon {
+  return {
+    title: `BSC Scan ${titleSuffix}`,
     type: 'custom',
     iconUrl: './assets/memescan.png',
     targetUrl: address ? `https://memescan.io/address/${address}` : 'https://memescan.io/'
