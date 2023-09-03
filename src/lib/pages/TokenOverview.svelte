@@ -1,35 +1,37 @@
 <script lang="ts">
   import TokenPriceTile from '../components/TokenPriceTile.svelte';
-  import {formatNumber} from "../utils";
-  import HeaderRow from "../components/HeaderRow.svelte";
-  import {Button} from "@svelteuidev/core";
+  import {formatNumber, formatNumberUSD} from "../utils";
   import {Grid} from "../components/Grid";
-  import {MAXX_BNB, MAXX_ETH, MAXX_PWR, PWR_CEX, PWR_DEX} from "../logic/maxxMainTokes";
+  import {MAXX_BNB, MAXX_ETH, MAXX_PWR, PWR_CEX, PWR_DEX, XTRA_PWR} from "../logic/maxxMainTokes";
   import {attachRefresher, isRefreshing, refreshData} from "../logic/refresher";
-  import {PriceCache, priceCacheCall} from "../logic/priceCache";
+  import {getTokenPriceReadable, PriceCache, priceCacheCall} from "../logic/priceCache";
   import {getTokenRatio} from "../sources";
-  import type {PriceCacheEntry, StaticTokenInformationDEX} from "../logic/types";
+  import type {PriceCacheEntry, SimpleTokenInfo, StaticTokenInformationDEX} from "../logic/types";
   import {MUSDT_MAXX_CONTRACT, WBNB_CONTRACT, WETH_CONTRACT, WPWR_CONTRACT} from "../logic/chainTokens";
   import {get} from "svelte/store";
-  import {updateEthPrice, updateBnbPrice} from "../coincapPriceChecker";
+  import {updateEthPrice, updateBnbPrice} from "../API/coincapApi";
   import PairedPriceToTokenAmount from "../components/PairedPriceToTokenAmount.svelte";
+  import FormattedNumberColorChanged from "../components/FormattedNumberColorChanged.svelte";
 
   // usually not needed BUT so that the IDE says "its ok" ^^
   const {Col: GridCol} = Grid;
 
+  const ethTokenInfo: SimpleTokenInfo = {
+    id: WETH_CONTRACT
+  };
+
+   const bnbTokenInfo: SimpleTokenInfo = {
+    id: WBNB_CONTRACT
+  };
 
   attachRefresher(
-    () => priceCacheCall({
-      id: WETH_CONTRACT
-    }, () => updateEthPrice().then(price => {
+    () => priceCacheCall(ethTokenInfo, () => updateEthPrice().then(price => {
       return {priceUSD: price, source: 'coincap API'}
     }))
   )
 
   attachRefresher(
-    () => priceCacheCall({
-      id: WBNB_CONTRACT
-    }, () => updateBnbPrice().then(price => {
+    () => priceCacheCall(bnbTokenInfo, () => updateBnbPrice().then(price => {
       return {priceUSD: price, source: 'coincap API'}
     }))
   )
@@ -83,28 +85,39 @@
     () => priceCacheCall(MAXX_PWR, () => getTokenPriceDex(MAXX_PWR))
   );
 
+  attachRefresher(
+    () => priceCacheCall(XTRA_PWR, () => getTokenPriceDex(XTRA_PWR))
+  );
+
+
   refreshData();
 
   const TOKENS_STATIC_LIST = [
     PWR_CEX,
     PWR_DEX,
+    XTRA_PWR,
     MAXX_BNB,
     MAXX_ETH,
     MAXX_PWR
   ] as const;
 
   const USD_CONTRACTS = [MUSDT_MAXX_CONTRACT];
+
+  const ethPrice = getTokenPriceReadable(ethTokenInfo);
+  const bnbPrice = getTokenPriceReadable(bnbTokenInfo);
+
+  setInterval(() => refreshData(), 1100*60);
 </script>
 
-<HeaderRow>
-   <Button on:click={() => refreshData()} compact loading={$isRefreshing}>
-      {$isRefreshing ? 'Refreshing' : 'Refresh'}
-   </Button>
-   &nbsp;
-   can be refreshed every full min
-</HeaderRow>
 <br/>
 <br/>
+<br/>
+   Maxx View - auto refreshing every minute :)
+
+<br/>
+<br/>
+
+ETH: $ <FormattedNumberColorChanged formattedNumber={formatNumber($ethPrice?.priceUSD)} rawNumber={$ethPrice?.priceUSD} /> - BNB: $ <FormattedNumberColorChanged formattedNumber={formatNumber($bnbPrice?.priceUSD)} rawNumber={$bnbPrice?.priceUSD} />
 
 <Grid>
    <GridCol span={12}>

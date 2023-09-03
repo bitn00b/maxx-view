@@ -1,6 +1,11 @@
 <script lang="ts">
-  import type {TokenEntry} from "./memeScanTypes";
   import {cacheableResult} from "./utils";
+  import {uniswapV2Contract} from "./ABII/contractsWithLiquidity";
+
+  import {getTokens, type TokenEntry} from "./API/maxxScanApi";
+  import TokenPriceTile from "./components/TokenPriceTile.svelte";
+  import type {StaticTokenInformationDEX} from "./logic/types";
+  import {getContractOfChain} from "./API/web3ContractCache";
 
   export let tokenEntry: TokenEntry;
 
@@ -18,11 +23,10 @@
     refresh
   } = cacheableResult<TokenInfo>(`token_info_${tokenEntry.contractAddress}`, async () => {
     try {
-      /*const uniswapContractInstance = new web3PomConnection.eth.Contract(uniswapV2Contract as any, tokenEntry.contractAddress);
+      const tokenContract = getContractOfChain(tokenEntry.contractAddress, 'maxx', uniswapV2Contract);
 
-      console.info(uniswapContractInstance);
 
-      const pairAddress = await uniswapContractInstance.methods.uniswapV2Pair().call({
+      const pairAddress = await tokenContract.methods.uniswapV2Pair().call({
         from: tokenEntry.contractAddress
       });
 
@@ -44,7 +48,7 @@
           error: 'No Pair Found - ' + tokensOfPair.message
         }
       }
-*/
+
 
     } catch (e) {
       return {
@@ -55,6 +59,17 @@
   }, {
     status: 'not_loaded_yet'
   } as TokenInfo);
+
+  $: tokenInfoForTile = {
+    chain: 'maxx',
+    chainAddresses: {
+      tokenAddress: tokenEntry.contractAddress,
+      lpAddress: $tokenInfo.pairAddress,
+      pairedWithContract: $tokenInfo.pairedWith
+    },
+    type: 'chain',
+    urls: []
+  } satisfies StaticTokenInformationDEX;
 
 </script>
 
@@ -69,3 +84,5 @@
 <br/>
 
 {JSON.stringify(tokenEntry)}
+
+ <TokenPriceTile staticInfo={tokenInfoForTile} />

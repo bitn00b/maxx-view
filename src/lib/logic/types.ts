@@ -49,9 +49,3 @@ export interface StaticTokenInformationDEX extends SharedTokenInformation {
 }
 
 export type StaticTokenInformation = StaticTokenInformationCustom | StaticTokenInformationDEX;
-
-export interface CalculatedTokenRatio {
-  pairedTokenAmount: number;
-  tokenAmount: number;
-  ratio: number;
-}

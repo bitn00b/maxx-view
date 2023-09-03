@@ -1,7 +1,11 @@
 import type {Contract} from "web3-eth-contract";
-import type {CalculatedTokenRatio} from "./state";
-import {derived} from "svelte/store";
-import type {Readable} from "svelte/store";
+import {derived, type Readable} from "svelte/store";
+
+export interface CalculatedTokenRatio {
+  pairedTokenAmount: number;
+  tokenAmount: number;
+  ratio: number;
+}
 
 
 export function calculateRatio(args: {
@@ -46,7 +50,10 @@ export async function calculateRatioByContracts(args: {
 }
 
 
-export function deriveActualPrice(tokenRatioStore: Readable<CalculatedTokenRatio>, baseTokenPriceStore: Readable<number>) {
+export function deriveActualPrice(
+  tokenRatioStore: Readable<CalculatedTokenRatio>,
+  baseTokenPriceStore: Readable<number>
+) {
   return derived([tokenRatioStore, baseTokenPriceStore], ([tokenRatio, baseTokenPrice]) => {
     if (!tokenRatio) {
       return 0;

@@ -64,8 +64,10 @@ export function maxxExplorer(address?: string, titleSuffix = ''): UrlIcon {
   return {
     title: `Maxx Explorer ${titleSuffix}`,
     type: 'custom',
-    iconUrl: './assets/memescan.png',
-    targetUrl: address ? `https://memescan.io/address/${address}` : 'https://memescan.io/'
+    iconUrl: './assets/maxxExplorer.png',
+    targetUrl: address
+      ? `https://explorer.maxxchain.org/address/${address}`
+      : 'https://explorer.maxxchain.org/'
   }
 }
 

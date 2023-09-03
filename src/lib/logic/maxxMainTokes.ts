@@ -101,3 +101,22 @@ export const MAXX_PWR: StaticTokenInformationDEX = {
     pairedWithContract: WPWR_CONTRACT
   }
 };
+
+const XTRA_PWR_LP = '0xfc0e3991c4ee5fa281faf0d13ade54f20c91ec4f';
+
+export const XTRA_PWR: StaticTokenInformationDEX = {
+  id: 'xtraPWR',
+  tokenName: 'XTRA',
+  title: 'XTRA (PWR)',
+  chain: 'maxx',
+  type: 'chain',
+  urls: [
+    ...charts('maxx', XTRA_PWR_LP)
+  ],
+  chainAddresses: {
+    tokenAddress: '0xb151859760f0460f7f2c619b7970a65d1bad8949',
+    lpAddress: XTRA_PWR_LP,
+    pairedWith: 'PWR',
+    pairedWithContract: WPWR_CONTRACT
+  }
+}

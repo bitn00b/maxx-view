@@ -1,12 +1,13 @@
-import type { Readable } from "svelte/store";
-import { writable } from "svelte/store";
-import { get_store_value } from "svelte/internal";
+import type {Readable} from "svelte/store";
+import {writable, get, derived} from "svelte/store";
 
 import nf from '@tuplo/numberfmt';
+import {useViewportSize} from "@svelteuidev/composables";
+import {theme} from "@svelteuidev/core";
 
 /* yaaay a utils file */
 
-export function localStoredSetting<TWritableType> (key: string, defaultValue: string, mapper: (savedValue: string) => TWritableType) {
+export function localStoredSetting<TWritableType>(key: string, defaultValue: string, mapper: (savedValue: string) => TWritableType) {
   const localStoredValue = localStorage.getItem(key) ?? defaultValue;
 
   const writableToReturn = writable(mapper(localStoredValue));
@@ -16,7 +17,7 @@ export function localStoredSetting<TWritableType> (key: string, defaultValue: st
   return writableToReturn;
 }
 
-export function localStoredSettingJson<TWritableType> (key: string, defaultValue: TWritableType) {
+export function localStoredSettingJson<TWritableType>(key: string, defaultValue: TWritableType) {
   const localStoredValue = localStorage.getItem(key);
 
   const jsonValue = localStoredValue && localStoredValue !== "undefined" && localStoredValue !== "null"
@@ -30,26 +31,50 @@ export function localStoredSettingJson<TWritableType> (key: string, defaultValue
   return writableToReturn;
 }
 
-
 export interface CacheableResult<TData> {
   store: Readable<TData>;
   loadingState: Readable<string>;
 
-  refresh ();
+  refresh(): Promise<void>;
 }
 
-export function cacheableResult<TData> (cacheKey: string, getDataCall: () => Promise<TData>, defaultIfEmpty: TData): CacheableResult<TData> {
-  const writableStore = localStoredSettingJson(cacheKey, defaultIfEmpty);
+
+export function refreshable<TData>(getDataCall: () => Promise<TData>, defaultIfEmpty: TData): CacheableResult<TData> {
+  const writableStore = writable(defaultIfEmpty);
   const loadingState = writable('');
 
-  async function refresh () {
+  async function refresh() {
     loadingState.set('loading');
     const loadedData = await getDataCall();
     loadingState.set('loaded');
     writableStore.set(loadedData);
   }
 
-  const currentValue = get_store_value(writableStore);
+  const currentValue = get(writableStore);
+
+  if (currentValue == defaultIfEmpty) {
+    refresh();
+  }
+
+  return {
+    store: writableStore,
+    loadingState,
+    refresh
+  }
+}
+
+export function cacheableResult<TData>(cacheKey: string, getDataCall: () => Promise<TData>, defaultIfEmpty: TData): CacheableResult<TData> {
+  const writableStore = localStoredSettingJson(cacheKey, defaultIfEmpty);
+  const loadingState = writable('');
+
+  async function refresh() {
+    loadingState.set('loading');
+    const loadedData = await getDataCall();
+    loadingState.set('loaded');
+    writableStore.set(loadedData);
+  }
+
+  const currentValue = get(writableStore);
 
   if (currentValue == defaultIfEmpty) {
     refresh();
@@ -67,7 +92,7 @@ export function cacheableResult<TData> (cacheKey: string, getDataCall: () => Pro
 const nfpUSD = nf.partial('0,0.00000000');
 const nfp = nf.partial('0,0[.00]');
 
-export function formatNumberUSD (value: number): string {
+export function formatNumberUSD(value: number): string {
   if (!value) {
     return '';
   }
@@ -76,21 +101,21 @@ export function formatNumberUSD (value: number): string {
 }
 
 
-export function formatNumber (value: number): string {
+export function formatNumber(value: number, fallback = ''): string {
   if (!value) {
-    return '';
+    return fallback;
   }
 
   return nfp(value);
 }
 
 
-export function averageOfNumbers (numbers: number[]) {
+export function averageOfNumbers(numbers: number[]) {
   return numbers.reduce((previousValue, currentValue) => previousValue + currentValue, 0) / numbers.length;
 }
 
 
-export function createChunks<TElement> (
+export function createChunks<TElement>(
   sourceArray: TElement[], chunkSize: number
 ) {
   return sourceArray.reduce((resultArray, item, index) => {
@@ -103,11 +128,28 @@ export function createChunks<TElement> (
     resultArray[chunkIndex].push(item)
 
     return resultArray
-  }, [])
+  }, [] as TElement[][])
 }
 
-export function sumPropertyOfArray<TElement> (source: TElement[], chooseProp: (el: TElement) => number) {
+export function sumPropertyOfArray<TElement>(source: TElement[], chooseProp: (el: TElement) => number) {
   return source.reduce((prev, cur) => {
     return prev + chooseProp(cur);
   }, 0);
 }
+
+
+export const viewport = useViewportSize();
+
+const xsBreakpoint = theme.breakpoints.xs.value;
+
+let lastWidth = 0;
+const widthChanged: Readable<number> = derived(viewport, ({width}, set) => {
+  if (lastWidth !== width) {
+    set(width);
+    lastWidth = width;
+  }
+});
+
+export const isSmallDevice = derived(widthChanged, width => {
+  return width < xsBreakpoint;
+})

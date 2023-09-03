@@ -9,6 +9,7 @@
   import {formatNumberUSD} from "../utils.js";
   import type {StaticTokenInformation, UrlIcon} from "../logic/types";
   import {getTokenPriceReadable} from "../logic/priceCache";
+  import FormattedNumberColorChanged from "./FormattedNumberColorChanged.svelte";
 
   const MenuItem = Menu.Item;
 
@@ -53,23 +54,20 @@
                      {#if urlEntry.type === 'custom'}
                         <MenuItem href={urlEntry.targetUrl} root="a" target="_blank"
                                   icon={SimpleImage} iconProps="{{
-                        iconProps: {
                           src: urlEntry.iconUrl,
                           size: 16,
-                        }
                       }}">
                            {urlEntry.title}
                         </MenuItem>
                      {:else}
                         <MenuItem href={urlEntry.targetUrl} root="a" target="_blank"
                                   icon={Icon}
-                                  iconProps="{
-                       {iconProps: {
+                                  iconProps="{{
                          src: iconMap[urlEntry.type],
                          size: 24,
                          color:iconColorMap[urlEntry.type],
                          className: 'custom-icon-16'
-                       }}}">
+                       }}">
                            {urlEntry.title}
                         </MenuItem>
                      {/if}
@@ -87,7 +85,11 @@
       </div>
 
       {#if !!priceToShow }
-         <h3>$ {formatNumberUSD(priceToShow)}</h3>
+         <h3>$
+            <FormattedNumberColorChanged
+               rawNumber={priceToShow}
+               formattedNumber={formatNumberUSD(priceToShow)}/>
+         </h3>
       {/if}
 
       <slot name="additionalData" priceToShow={priceToShow}></slot>
