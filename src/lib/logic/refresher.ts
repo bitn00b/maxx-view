@@ -1,6 +1,15 @@
-import {get, writable} from "svelte/store";
+import {get, type Readable, writable} from "svelte/store";
 
-export const isRefreshing = writable(false)
+function createReadableTimer(interval: number): Readable<number> {
+  const timerWritable = writable(1);
+
+  setInterval(() => timerWritable.update(t => ++t), interval);
+
+  return timerWritable;
+}
+
+export const isRefreshing = writable(false);
+export const refresher = createReadableTimer(1010 * 60)
 
 const listOfThingsToExecute: (() => Promise<void>)[] = [];
 
@@ -25,3 +34,5 @@ export async function refreshData() {
 
   isRefreshing.set(false);
 }
+
+refresher.subscribe(() => refreshData());

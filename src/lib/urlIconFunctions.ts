@@ -1,5 +1,14 @@
 import type {CHAIN_TYPES, UrlIcon} from "./logic/types";
 
+export function link(link: string, title: string): UrlIcon {
+  return {
+    targetUrl: link,
+    title,
+    type: 'custom',
+    iconUrl: new URL(link).origin+'/favicon.ico'
+  }
+}
+
 export function homepage(link: string): UrlIcon {
   return {
     title: 'Homepage',

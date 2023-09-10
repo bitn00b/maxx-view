@@ -10,6 +10,7 @@
   import type {StaticTokenInformation, UrlIcon} from "../logic/types";
   import {getTokenPriceReadable} from "../logic/priceCache";
   import FormattedNumberColorChanged from "./FormattedNumberColorChanged.svelte";
+  import type {SvelteComponent} from "svelte";
 
   const MenuItem = Menu.Item;
 
@@ -36,6 +37,19 @@
     'telegram': '#0088cc'
   }
 
+  let menuIconElement: SvelteComponent;
+  let lastScroll = 0;
+
+  $: if (menuIconElement) {
+    const realElement: HTMLElement = menuIconElement.$$.ctx[0];
+    realElement.addEventListener('pointerdown', function () {
+      lastScroll = window.scrollY;
+    });
+
+    realElement.addEventListener('click', function () {
+      window.scrollTo({top: lastScroll, behavior: "instant"})
+    });
+  }
 </script>
 
 <Paper>
@@ -45,29 +59,31 @@
 
          {#if staticInfo.urls.length}
             <div class="top-right">
+
                <Menu>
-                  <ActionIcon color="blue" variant="light" slot="control">
+                  <ActionIcon color="blue" variant="light" slot="control"
+                              bind:this={menuIconElement} root="div">
                      <Icon src={FaSolidExternalLinkSquareAlt} size="16" color="lightgray"></Icon>
                   </ActionIcon>
 
                   {#each staticInfo.urls as urlEntry}
                      {#if urlEntry.type === 'custom'}
                         <MenuItem href={urlEntry.targetUrl} root="a" target="_blank"
-                                  icon={SimpleImage} iconProps="{{
+                                  icon={SimpleImage} iconProps={{
                           src: urlEntry.iconUrl,
                           size: 16,
-                      }}">
+                      }}>
                            {urlEntry.title}
                         </MenuItem>
                      {:else}
                         <MenuItem href={urlEntry.targetUrl} root="a" target="_blank"
                                   icon={Icon}
-                                  iconProps="{{
+                                  iconProps={{
                          src: iconMap[urlEntry.type],
                          size: 24,
                          color:iconColorMap[urlEntry.type],
                          className: 'custom-icon-16'
-                       }}">
+                       }}>
                            {urlEntry.title}
                         </MenuItem>
                      {/if}

@@ -15,7 +15,7 @@ export function getTokenPriceReadable(tokenInfo: SimpleTokenInfo) {
 
 export async function priceCacheCall(
   tokenInfo: SimpleTokenInfo,
-  priceGetter: () => Promise<PriceCacheEntry>,
+  priceGetter: () => Promise<Partial<PriceCacheEntry>>,
   options: {
     setContractAsKeyAsWell: string
   } = {setContractAsKeyAsWell: ''}
@@ -38,12 +38,18 @@ export async function priceCacheCall(
 
   PriceCache.update(cache => {
     cache[tokenInfo.id] = {
+      priceUSD: 0,
+      source: '',
+      priceBackedToken: 0,
       ...result,
       updatedAt: new Date()
     };
 
     if (options.setContractAsKeyAsWell) {
       cache[options.setContractAsKeyAsWell] = {
+        priceUSD: 0,
+        source: '',
+        priceBackedToken: 0,
         ...result,
         updatedAt: new Date()
       };

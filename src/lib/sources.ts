@@ -33,17 +33,17 @@ export const decimals = 10 ** 18;
 
 export async function getTokenRatio(tokenInfo: StaticTokenInformationDEX) {
   const [tokenContract, baseTokenContract] = await Promise.all([
-    getContractOfChain(tokenInfo.chainAddresses!.tokenAddress, tokenInfo.chain, [balanceOfABII]),
-    getContractOfChain(tokenInfo.chainAddresses!.pairedWithContract, tokenInfo.chain, [balanceOfABII]),
+    getContractOfChain(tokenInfo.chainInformation!.tokenAddress, tokenInfo.chain, [balanceOfABII]),
+    getContractOfChain(tokenInfo.chainInformation!.pairedWithContract, tokenInfo.chain, [balanceOfABII]),
   ])
 
   const tokenRatio = await calculateRatioByContracts({
-    tokenDecimals: decimals,
-    baseTokenDecimals: decimals,
+    tokenDecimals: tokenInfo.chainInformation.tokenDecimals ?? decimals,
+    baseTokenDecimals: tokenInfo.chainInformation.pairedWithDecimals ?? decimals,
 
     tokenContract,
     baseTokenContract,
-    addressOfLp: tokenInfo.chainAddresses!.lpAddress
+    addressOfLp: tokenInfo.chainInformation!.lpAddress
   });
 
   return tokenRatio;

@@ -33,7 +33,7 @@ export const PWR_DEX: StaticTokenInformationDEX = {
   title: 'PWR DEX Price',
 
   urls: [],
-  chainAddresses: {
+  chainInformation: {
     lpAddress: "0x217a7522feda3cea46744645e6329c784606bdc9",
     pairedWithContract: MUSDT_MAXX_CONTRACT,
     pairedWith: 'MUSDT',
@@ -56,7 +56,7 @@ export const MAXX_BNB: StaticTokenInformationDEX = {
   urls: [
     ...charts('bsc', BSC_LP)
   ],
-  chainAddresses: {
+  chainInformation: {
     tokenAddress: MAXX_BSC_CONTRACT,
     lpAddress: BSC_LP,
     pairedWith: 'BNB',
@@ -75,7 +75,7 @@ export const MAXX_ETH: StaticTokenInformationDEX = {
   urls: [
     ...charts('eth', MAXX_ETH_LP)
   ],
-  chainAddresses: {
+  chainInformation: {
     tokenAddress: '0x966e770030209C95F974f37Edbde65D98e853354',
     lpAddress: MAXX_ETH_LP,
     pairedWith: 'ETH',
@@ -94,7 +94,7 @@ export const MAXX_PWR: StaticTokenInformationDEX = {
   urls: [
     ...charts('maxx', MAXX_PWR_LP)
   ],
-  chainAddresses: {
+  chainInformation: {
     tokenAddress: '0x25490a833a22050dEaE49647d0c264e1960FF8E0',
     lpAddress: MAXX_PWR_LP,
     pairedWith: 'PWR',
@@ -113,7 +113,7 @@ export const XTRA_PWR: StaticTokenInformationDEX = {
   urls: [
     ...charts('maxx', XTRA_PWR_LP)
   ],
-  chainAddresses: {
+  chainInformation: {
     tokenAddress: '0xb151859760f0460f7f2c619b7970a65d1bad8949',
     lpAddress: XTRA_PWR_LP,
     pairedWith: 'PWR',

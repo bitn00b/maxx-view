@@ -8,9 +8,9 @@
   export let priceOfToken: number;
 
   const priceOfPaired = getTokenPriceReadable({
-    id: tokenInfo.chainAddresses.pairedWithContract
+    id: tokenInfo.chainInformation.pairedWithContract
   })
 </script>
 
-1 {tokenInfo.chainAddresses.pairedWith}
+1 {tokenInfo.chainInformation.pairedWith}
 => {formatNumber($priceOfPaired?.priceUSD / priceOfToken)} {tokenInfo.tokenName}

@@ -62,7 +62,7 @@
 
   $: tokenInfoForTile = {
     chain: 'maxx',
-    chainAddresses: {
+    chainInformation: {
       tokenAddress: tokenEntry.contractAddress,
       lpAddress: $tokenInfo.pairAddress,
       pairedWithContract: $tokenInfo.pairedWith

@@ -1,30 +1,30 @@
 <script lang="ts">
-
-  import type {CHAIN_TYPES} from "./logic/types";
+  import type {CHAIN_TYPES, StaticTokenInformationDEX} from "./logic/types";
   import {getStakingFee, getStakingInfo, rewardsEstimate} from "./API/stakingApi";
-  import {formatNumber, refreshable} from "./utils";
+  import {formatNumber, formatNumberUSD, refreshable} from "./utils";
   import {balanceOf, balanceOfToken} from "./API/balanceOfApi";
   import {MAXX_BNB, MAXX_ETH, MAXX_PWR, PWR_DEX} from "./logic/maxxMainTokes";
   import {derived, type Readable} from "svelte/store";
+  import {getTokenPriceReadable} from "./logic/priceCache";
 
   export let chain: CHAIN_TYPES;
   export let walletAddress: string;
-
-  export let rowClass: string;
-
   export let refresher: Readable<number>;
 
-  const maxxTokenContractAddressByChain: Record<CHAIN_TYPES, string> = {
-    maxx: MAXX_PWR.chainAddresses?.tokenAddress,
-    bsc: MAXX_BNB.chainAddresses?.tokenAddress,
-    eth: MAXX_ETH.chainAddresses?.tokenAddress,
+  const maxxTokenInformationByChain: Record<CHAIN_TYPES, StaticTokenInformationDEX> = {
+    maxx: MAXX_PWR,
+    bsc: MAXX_BNB,
+    eth: MAXX_ETH,
   }
 
   const pwrTokenContractAddressByChain: Record<CHAIN_TYPES, string> = {
-    maxx: PWR_DEX.chainAddresses?.tokenAddress,
+    maxx: PWR_DEX.chainInformation?.tokenAddress,
     bsc: '0x467833Bad9eB455229E118Af9A12f3C579c7f11C',
     eth: '0x0bE5DA34c333804b793a3B3B31C3203B2BdD7e94',
   }
+
+  const maxxPrice = getTokenPriceReadable(maxxTokenInformationByChain[chain])
+  const pwrPrice = getTokenPriceReadable(PWR_DEX)
 
   const {
     store: stakingFeeStore
@@ -51,7 +51,7 @@
     store: holdingsStore,
     refresh: holdingsRefresh
   } = refreshable(() => Promise.all([
-    balanceOfToken(chain, walletAddress, maxxTokenContractAddressByChain[chain]),
+    balanceOfToken(chain, walletAddress, maxxTokenInformationByChain[chain].chainInformation.tokenAddress),
 
     balanceOfToken(chain, walletAddress, pwrTokenContractAddressByChain[chain]),
 
@@ -69,42 +69,81 @@
   }
 
   $: if ($refresher !== 0) {
+    console.info('refreshing');
     refreshAll();
   }
 </script>
 
-<tr class={rowClass}>
-   <td colspan="5">
-      {chain.toUpperCase()} -
-
+<tr>
+   <td> {chain.toUpperCase()}</td>
+</tr>
+<tr class="odd">
+   <td colspan="3" style="text-align: center">In Wallet</td>
+</tr>
+<tr class="even">
+   <td>$MAXX</td>
+   <td>
+      {formatNumber($holdingsStore.maxxAmount, '0')}
+   </td>
+   <td>
+      $ {formatNumberUSD($holdingsStore.maxxAmount * $maxxPrice?.priceUSD)}
+   </td>
+</tr>
+<tr class="odd">
+   <td>PWR</td>
+   <td>
+      {formatNumber($holdingsStore.pwrAmount, '0')}
+   </td>
+   <td>
+      $ {formatNumberUSD($holdingsStore.pwrAmount * $pwrPrice?.priceUSD)}
+   </td>
+</tr>
+<tr class="even">
+   <td colspan="3"  style="text-align: center" >Staking Information
       { ($walletStakingInfoStore.isStaked) ? 'Staked' : 'Not Staked'}
 
       {#if $walletStakingInfoStore.isStaked}
          -
-         Duration: {$walletStakingInfoStore.PWRDDays} -
-         until { new Date($walletStakingInfoStore.stakedTill * 1000).toLocaleDateString()} <br/>
+         Duration: {$walletStakingInfoStore.PWRDDays} Days -
+         until { new Date($walletStakingInfoStore.stakedTill * 1000).toLocaleString()} <br/>
       {/if}
    </td>
-
 </tr>
-<tr class={rowClass}>
-   <td>
-      {formatNumber($holdingsStore.maxxAmount, '0')} $MAXX <br/>
-      {formatNumber($holdingsStore.pwrAmount, '0')} PWR
-   </td>
 
+{#if $walletStakingInfoStore.isStaked}
+   <tr  class="odd">
+      <td>Staked $MAXX</td>
+      <td>
+         {formatNumber($walletStakingInfoStore.stakedMAXXPWRD, '0')}
+      </td>
+      <td>
+         $ {formatNumberUSD($walletStakingInfoStore.stakedMAXXPWRD * $maxxPrice?.priceUSD)}
+      </td>
+   </tr>
+   <tr  class="even">
+      <td>Claimed PWR</td>
+      <td>
+         {formatNumber($walletStakingInfoStore.PWRDClaimed, '0')}
+      </td>
+      <td>
+         $ {formatNumberUSD($walletStakingInfoStore.PWRDClaimed * $pwrPrice?.priceUSD)}
+      </td>
+   </tr>
+   <tr  class="odd">
+      <td>Claimable PWR <br/>
+         Fee applied
+      </td>
+      <td>
+         {formatNumber($estimatedRewards, '0')}
+      </td>
+      <td>
+         $ {formatNumberUSD($estimatedRewards * $pwrPrice?.priceUSD)}
+      </td>
+   </tr>
+{/if}
 
-   {#if $walletStakingInfoStore.isStaked}
-      <td>{formatNumber($walletStakingInfoStore.stakedMAXXPWRD)} $MAXX</td>
-      <td>{formatNumber($walletStakingInfoStore.PWRDClaimed)} PWR</td>
-   {:else}
-      <td></td>
-      <td></td>
-   {/if}
-
-   {#if $estimatedRewards}
-      <td>{ formatNumber($estimatedRewards) } PWR</td>
-   {:else }
-      <td></td>
-   {/if}
-</tr>
+<style>
+   td:not(:first-of-type) {
+       text-align: center;
+   }
+</style>

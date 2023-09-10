@@ -40,11 +40,13 @@ export interface StaticTokenInformationDEX extends SharedTokenInformation {
   type: 'chain',
   chain: CHAIN_TYPES,
 
-  chainAddresses?: {
+  chainInformation: {
     tokenAddress: string;
+    tokenDecimals?: number;
     lpAddress: string;
     pairedWithContract: string;
     pairedWith: string;
+    pairedWithDecimals?: number;
   }
 }
 

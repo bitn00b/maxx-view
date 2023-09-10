@@ -2,6 +2,7 @@ import {writable} from "svelte/store";
 import {localStoredSettingJson} from "./utils";
 
 export const showWalletConfigModal = writable(false);
+export const showTippingModal = writable(false);
 
 
 export interface WalletEntry {

@@ -37,6 +37,7 @@ export async function calculateRatioByContracts(args: {
   const rawAmountOfToken = await args.tokenContract.methods.balanceOf(args.addressOfLp).call();
 
   console.info({
+    args,
     rawAmountOfBaseToken,
     rawAmountOfToken
   })
