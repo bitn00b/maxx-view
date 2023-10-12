@@ -10,7 +10,7 @@ export const web3EthConnection = lazyWeb3().then(Web3 => new Web3(ETH_RPC_URL));
 const BSC_RPC_URL = "https://bsc-dataseed.binance.org/";
 export const web3BscConnection = lazyWeb3().then(Web3 => new Web3(BSC_RPC_URL));
 
-const maxxChainDataseed = "https://mainrpc2.maxxchain.org";
+const maxxChainDataseed = "https://rpc1.maxxchain.org";
 
 export const web3MaxxConnection = lazyWeb3().then(Web3 => new Web3(maxxChainDataseed));
 
